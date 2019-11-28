@@ -12,9 +12,5 @@ go:
   - '1.12'
   - '1.13'
 
-install:
-  - make
-  - go get -t ./...
-
 script:
-  - go test -v ./...
+  - ./vendor.sh test

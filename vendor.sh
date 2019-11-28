@@ -118,16 +118,53 @@ function check-updates() {
     done
 }
 
+function tag-grammars() {
+    for grammar in ${grammars[@]}; do
+        tag-grammar `echo $grammar | tr ';' ' '`
+    done
+}
+
+function tag-grammar() {
+    lang=$1
+    version=$2
+    if [ "$lang" == "go" ]; then
+        lang="golang"
+    elif [ "$lang" == "c-sharp" ]; then
+        lang="csharp"
+    fi
+    echo "creating new tag $version for $lang"
+    if [[ "$lang" == typescript* ]]; then
+        git tag "typescript/typescript/$version" || :
+        git tag "typescript/tsx/$version" || :
+    else
+        # || : means do nothing and return 0 exit code instead of the error
+        git tag "$lang/$version" || :
+    fi
+}
+
+function test-all() {
+    go test ./...
+    for grammar in ${grammars[@]}; do
+        go test github.com/smacker/go-tree-sitter/`echo $grammar | cut -d';' -f1`
+    done
+}
+
 function help() {
-    echo "this script supports 2 subcommands:"
+    echo "this script supports following subcommands:"
+    echo "* test - runs 'go test' for tree-sitter and each grammar"
     echo "* check-updates - compares vendored versions with remote"
     echo "* download - re-downloads vendored files"
+    echo "* tag-grammars - use current commit for new grammar tags"
 }
 
 case $1 in
 check-updates) check-updates
 ;;
 download) download
+;;
+tag-grammars) tag-grammars `echo $grammar | tr ';' ' '`
+;;
+test) test-all
 ;;
 *) help
 ;;
